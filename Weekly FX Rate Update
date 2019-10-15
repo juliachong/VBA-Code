@@ -1,0 +1,60 @@
+
+Sub ImportFxRates()
+Dim CurrentDate As String
+Dim FileDate As String
+Const fxfilepath As String = "\\MERCER.COM\US_HOME\NYC4\JULIA-CHONG\Exchange Rates\"
+Const UTCfilepath As String = "K:\Client Interface\Client Files\United Tech Corp\FX Tracking\"
+Dim UTCfilename As String
+Dim fxfilename As String
+Dim fxwb As Workbook
+Dim wfwb As Workbook
+Dim LastCol As Long
+Dim FirstErrorValue As Long
+Dim LastErrorValue As Long
+Dim ErrorRange As Range
+Dim Tables As Worksheet
+Dim pw As String
+Dim OutApp As Object
+Dim OutMail As Object
+
+UTCfilename = UTCfilepath & "New Format June 2019_Ongoing Working File.xls"
+Set wfwb = Workbooks.Open(UTCfilename)
+
+CurrentDate = Format(Date, "yyyymmdd")
+FileDate = Format(Date, "dd mmm yyyy")
+
+fxfilename = fxfilepath & "exch_rates_" & CurrentDate & ".xlsx"
+Set fxwb = Workbooks.Open(fxfilename)
+If fxwb Is Nothing Then Exit Sub
+
+fxwb.Activate
+ActiveWorkbook.Worksheets(1).Range("B3:B152").Select
+Selection.Copy
+wfwb.Worksheets(2).Activate
+
+LastCol = Cells(4, ActiveWorkbook.Worksheets(2).Columns.Count).End(xlToLeft).Column
+ActiveWorkbook.Worksheets(2).Cells(4, LastCol).Offset(0, 1).PasteSpecial
+
+wfwb.Worksheets(1).Cells.EntireColumn.Hidden = False
+ActiveWorkbook.Save
+
+wfwb.Worksheets(1).Activate
+FirstErrorValue = Cells.Find(What:="#DIV/0!", After:=Range("O3"), LookIn:=xlValues, LookAt:=xlPart, SearchOrder:=xlByColumns, SearchDirection:=xlNext, MatchCase:=False).Column
+LastErrorValue = Cells.Find(What:="#DIV/0!", After:=Range("O3"), LookIn:=xlValues, LookAt:=xlPart, SearchOrder:=xlByColumns, SearchDirection:=xlPrevious, MatchCase:=False).Column
+
+
+ActiveWorkbook.Worksheets(1).Range(Cells(1, FirstErrorValue), Cells(1, LastErrorValue)).EntireColumn.Hidden = True
+
+wfwb.Worksheets(2).Visible = False
+
+Set Tables = wfwb.Worksheets(1)
+pw = "roscoe"
+
+Tables.Protect Password:=pw, DrawingObjects:=False, Scenarios:=False, UserInterfaceOnly:=True, AllowSorting:=True, AllowFiltering:=True, AllowUsingPivotTables:=True
+
+ActiveWorkbook.Protect Password:=pw
+wfwb.SaveAs Filename:=UTCfilepath & "UTC FX Tracking_" & FileDate
+
+End Sub
+
+
