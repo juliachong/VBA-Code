@@ -1,0 +1,94 @@
+Sub DelColumns()
+Range("D:E,K:M,P:Q").Delete
+
+End Sub
+
+Sub CreatePivotTable()
+
+Dim Psheet As Worksheet
+Dim Dsheet As Worksheet
+Dim Pcache As PivotCache
+Dim PTable As PivotTable
+Dim PRange As Range
+Dim LastRow As Long
+Dim LastCol As Long
+Dim StartCell As Range
+Dim PivotStartCell As Range
+Dim PivotLastRow As Long
+
+
+Set Dsheet = ActiveSheet
+Set StartCell = Range("A9")
+
+LastRow = Dsheet.Cells(Dsheet.Rows.Count, StartCell.Column).End(xlUp).Row
+LastCol = Dsheet.Cells(StartCell.Row, Dsheet.Columns.Count).End(xlToLeft).Column
+
+
+On Error Resume Next
+Application.DisplayAlerts = False
+Worksheets("PivotTable").Delete
+Sheets.Add Before:=ActiveSheet
+ActiveSheet.Name = "PivotTable"
+Application.DisplayAlerts = True
+
+Set Psheet = Worksheets("PivotTable")
+Set PRange = Dsheet.Range(StartCell, Dsheet.Cells(LastRow, LastCol))
+
+Set Pcache = ActiveWorkbook.PivotCaches.Create(xlDatabase, PRange, xlPivotTableVersion14).CreatePivotTable(Psheet.Cells(1, 1), "Currency", xlPivotTableVersion14)
+Set PTable = Pcache.CreatePivotTable(Psheet.Cells(1, 1), "Currency", xlPivotTableVersion14)
+
+
+With ActiveSheet.PivotTables("Currency").PivotFields("CONTRACT_CURRENCY")
+.Orientation = xlRowField
+.Position = 1
+End With
+
+With ActiveSheet.PivotTables("Currency").PivotFields("RESERVE_ORIG_AMOUNT")
+.Orientation = xlDataField
+.Position = 1
+.Function = xlSum
+.NumberFormat = "#,##0"
+.Name = "Total "
+
+End With
+
+With ActiveSheet.PivotTables("Currency").TableRange2.Copy
+Dsheet.Range("AC9").End(xlDown).Offset(2, 0).PasteSpecial xlPasteValues
+
+End With
+With ActiveSheet.PivotTables("Currency").TableRange2.Copy
+Dsheet.Range("AC9").End(xlDown).Offset(2, 0).PasteSpecial xlPasteValues
+End With
+
+Dim PivotTableRange As Range
+Dim PivotFirstRowCell As Long
+Dim PivotLastRowCell As Long
+Dim PivotFirstColCell As Long
+Dim PivotLastColCell As Long
+Dim ConversionRange As Range
+
+
+PivotFirstRowCell = Dsheet.Range("AC9").End(xlDown).Offset(3, 0).Row
+' First Currency
+PivotLastRowCell = Dsheet.Range("AE9").End(xlDown).Offset(3, 0).Row
+' First Conversion Spot
+PivotFirstColCell = Dsheet.Cells(Dsheet.Rows.Count, 29).End(xlUp).Offset(-1, 0).Row
+' Last Currency
+PivotLastColCell = Dsheet.Cells(Dsheet.Rows.Count, 31).End(xlUp).Offset(-1, 0).Row
+' Last Conversion Spot
+Set PivotTableRange = Dsheet.Range(PivotFirstRowCell, PivotFirstColCell)
+
+Dsheet.Cells(PivotFirstColCell + 2, 29).Value = "Total OSLR"
+
+
+
+
+            
+
+
+End If
+
+End Sub
+
+
+
